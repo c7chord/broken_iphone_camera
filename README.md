@@ -25,7 +25,24 @@
 
 > 초광각 카메라는 초점이 고정되어 있습니다. 1×, 2× 화질은 원래 1× 카메라보다 떨어집니다. 이건 하드웨어의 물리적 한계입니다.
 
-## 설치 방법
+## 웹앱 버전 (아이폰만으로 사용, 설치 불필요)
+
+컴퓨터가 없다면 `web/` 폴더의 웹앱을 쓰세요. Safari로 링크를 열기만 하면 됩니다.
+
+- 주소: `https://c7chord.github.io/broken_iphone_camera/` (GitHub Pages 배포 후)
+- Safari 공유 버튼 → **홈 화면에 추가**를 누르면 앱처럼 아이콘이 생깁니다.
+- 카메라 목록에서 **초광각(Ultra Wide)** 카메라를 찾아 직접 엽니다. 고장 난 광각 카메라는 열지 않습니다. 자동으로 못 찾으면 설정에서 고를 수 있습니다.
+- 사진은 영상 스트림의 프레임을 떠서 JPEG로 저장합니다. 동영상은 MediaRecorder로 녹화합니다(MP4, 소리 포함).
+- 찍은 것은 웹앱 안에 임시로 보관됩니다. 촬영 직후 뜨는 **사진 앱에 저장** 버튼이나 왼쪽 아래 미리보기를 누르고, 공유 창에서 **"이미지 저장"/"비디오 저장"**을 고르세요.
+- 네이티브 앱보다 해상도가 낮을 수 있고, 탭해서 노출 맞추기는 지원하지 않습니다.
+
+### GitHub Pages 배포 방법 (처음 한 번)
+
+1. 저장소를 Public으로 바꿉니다. 무료 플랜에서는 공개 저장소만 Pages를 쓸 수 있습니다.
+2. **Settings → Pages → Build and deployment → Source**를 **GitHub Actions**로 바꿉니다.
+3. `web/`이 들어 있는 브랜치를 `main`에 합칩니다. 그러면 `.github/workflows/pages.yml`이 자동으로 배포합니다. 이미 `main`에 있다면 **Actions → Deploy web app to GitHub Pages → Run workflow**를 누릅니다.
+
+## 네이티브 앱 설치 방법
 
 App Store에 올라간 앱이 아니므로 직접 설치해야 합니다. 둘 중 하나를 고르세요.
 
@@ -63,7 +80,9 @@ RearCam/
   OrientationMonitor.swift  가속도계 기반 기기 방향
   CameraPreview.swift       AVCaptureVideoPreviewLayer 래퍼
   SettingsView.swift        설정, 진단 정보
+web/                        웹앱 (index.html, app.js, style.css, manifest.json)
 .github/workflows/build.yml macOS에서 빌드해서 서명 안 된 IPA를 만드는 CI
+.github/workflows/pages.yml 웹앱을 GitHub Pages로 배포
 ```
 
 ## 문제가 생기면
