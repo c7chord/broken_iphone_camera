@@ -18,7 +18,8 @@ struct CameraPreview: UIViewRepresentable {
         let view = PreviewUIView()
         view.backgroundColor = .black
         view.previewLayer.session = camera.session
-        view.previewLayer.videoGravity = .resizeAspect
+        // 미리보기 영역은 결과물과 같은 비율이므로 채우기(가운데 자르기)로 표시
+        view.previewLayer.videoGravity = .resizeAspectFill
         camera.previewLayer = view.previewLayer
         camera.updatePreviewRotation()
         return view

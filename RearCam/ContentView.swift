@@ -52,29 +52,54 @@ struct ContentView: View {
 
     // MARK: - 레이아웃
 
+    private static let topBarHeight: CGFloat = 50
+    private static let bottomBarHeight: CGFloat = 92
+
+    /// 아이폰 카메라 앱처럼 미리보기를 화면 가로폭에 꽉 채운다. 버튼들은 미리보기 위에 겹친다.
     private var cameraUI: some View {
-        VStack(spacing: 0) {
-            topBar
-                .frame(height: 50)
+        GeometryReader { root in
+            let inset = root.safeAreaInsets
+            let fullWidth = root.size.width + inset.leading + inset.trailing
+            let fullHeight = root.size.height + inset.top + inset.bottom
+            let stage = stageFrame(width: fullWidth, height: fullHeight, insets: inset)
 
-            GeometryReader { geo in
-                let aspect: CGFloat = camera.mode == .photo ? 4.0 / 3.0 : 16.0 / 9.0
-                let height = min(geo.size.width * aspect, geo.size.height)
-                let width = height / aspect
+            ZStack(alignment: .topLeading) {
                 previewArea
-                    .frame(width: width, height: height)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(width: stage.width, height: stage.height)
+                    .offset(x: stage.minX, y: stage.minY)
+
+                VStack(spacing: 0) {
+                    topBar
+                        .frame(height: Self.topBarHeight)
+
+                    Spacer(minLength: 0)
+
+                    zoomBar
+                        .padding(.vertical, 10)
+
+                    modePicker
+                        .padding(.bottom, 14)
+
+                    bottomBar
+                        .padding(.bottom, 16)
+                }
+                .padding(.top, inset.top)
+                .padding(.bottom, inset.bottom)
+                .frame(width: fullWidth, height: fullHeight)
             }
-
-            zoomBar
-                .padding(.vertical, 10)
-
-            modePicker
-                .padding(.bottom, 14)
-
-            bottomBar
-                .padding(.bottom, 16)
+            .frame(width: fullWidth, height: fullHeight, alignment: .topLeading)
+            .ignoresSafeArea()
         }
+    }
+
+    /// 4:3 / 1:1 은 상단 바 바로 아래 4:3 자리에, 9:16 처럼 긴 화면은 화면 가운데에 둔다.
+    private func stageFrame(width w: CGFloat, height h: CGFloat, insets: EdgeInsets) -> CGRect {
+        let height = w * camera.previewRatio
+        let top = insets.top + Self.topBarHeight
+        let bottom = h - insets.bottom - Self.bottomBarHeight
+        let region = min(w * 4 / 3, bottom - top)
+        let y = height <= region + 1 ? top + (region - height) / 2 : (h - height) / 2
+        return CGRect(x: 0, y: y, width: w, height: height)
     }
 
     private var topBar: some View {
@@ -91,6 +116,21 @@ struct ContentView: View {
             .disabled(camera.position == .front)
             .opacity(camera.position == .front ? 0.3 : 1)
 
+            Button {
+                camera.cycleAspect()
+            } label: {
+                Text(camera.photoAspect.title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .frame(minWidth: 44, minHeight: 28)
+                    .background(Capsule().fill(Color.black.opacity(0.35)))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.85), lineWidth: 1.5))
+                    .rotationEffect(camera.iconRotation)
+            }
+            .opacity(camera.mode == .photo ? 1 : 0)
+            .disabled(camera.mode != .photo || camera.isRecording)
+
             Spacer()
 
             if camera.isRecording {
@@ -103,7 +143,8 @@ struct ContentView: View {
             } else {
                 Text(camera.formatSummary)
                     .font(.system(size: 11, weight: .medium).monospacedDigit())
-                    .foregroundColor(.white.opacity(0.55))
+                    .foregroundColor(.white.opacity(0.7))
+                    .shadow(color: .black.opacity(0.8), radius: 2)
             }
 
             Spacer()
@@ -201,6 +242,7 @@ struct ContentView: View {
                     Text(mode.title)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(camera.mode == mode ? .yellow : .white.opacity(0.75))
+                        .shadow(color: .black.opacity(0.8), radius: 2)
                 }
                 .disabled(camera.isRecording)
             }
