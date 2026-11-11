@@ -18,6 +18,7 @@ const els = {
   topbar: $('#topbar'),
   bottombar: $('#bottombar'),
   btnAspect: $('#btn-aspect'),
+  btnTorch: $('#btn-torch'),
   video: $('#video'),
   stage: $('#stage'),
   viewport: $('#viewport'),
@@ -127,7 +128,10 @@ const state = {
   zoom: 1,
   desired: { back: 1, front: 1 },
   hwZoom: null,
+  hwZoomValue: null,
   swFactor: 1,
+  torch: false,
+  torchSupported: false,
   zoomLocked: false,
   recorder: null,
   recChunks: [],
@@ -428,8 +432,15 @@ async function startCamera() {
       ? { min: caps.zoom.min, max: caps.zoom.max }
       : null;
 
+    state.hwZoomValue = null;
+    state.torchSupported = !!(caps && caps.torch !== undefined && state.facing === 'back');
+    if (!state.torchSupported) state.torch = false;
+    updateTorchButton();
+
     layoutStage();
     setZoom(state.desired[state.facing] || 1);
+    // 카메라를 다시 열면 플래시가 꺼지므로 켜 둔 상태였다면 다시 켠다 (하드웨어 줌이면 setZoom 에서 함께 적용됨)
+    if (state.torch && !state.hwZoom) syncTrackConstraints();
     updateFormatInfo();
     maybeShowPermissionTip();
   } catch (e) {
@@ -631,26 +642,68 @@ function zoomText(value) {
   return s + '×';
 }
 
-let hwPending = null;
-let hwBusy = false;
+let syncPending = false;
+let syncBusy = false;
 
-function requestHwZoom(factor) {
-  hwPending = factor;
-  if (hwBusy) return;
-  hwBusy = true;
+/** 하드웨어 줌·플래시를 트랙에 적용한다. applyConstraints 는 전체를 덮어쓰므로 둘을 항상 함께 보낸다. */
+function syncTrackConstraints() {
+  syncPending = true;
+  if (syncBusy) return;
+  syncBusy = true;
   (async () => {
-    while (hwPending !== null) {
-      const value = hwPending;
-      hwPending = null;
+    while (syncPending) {
+      syncPending = false;
       const track = state.track;
       if (!track) break;
+      const adv = {};
+      if (state.hwZoom && state.hwZoomValue != null) adv.zoom = state.hwZoomValue;
+      if (state.torchSupported) adv.torch = state.torch;
+      const constraints = Object.assign({}, state.videoConstraints);
+      if (Object.keys(adv).length) constraints.advanced = [adv];
       try {
-        await track.applyConstraints(Object.assign({}, state.videoConstraints, { advanced: [{ zoom: value }] }));
+        await track.applyConstraints(constraints);
       } catch (_) { /* 무시 */ }
     }
-    hwBusy = false;
+    syncBusy = false;
+    if (state.torchSupported) checkTorchApplied();
   })();
 }
+
+function requestHwZoom(factor) {
+  state.hwZoomValue = factor;
+  syncTrackConstraints();
+}
+
+// ---------------------------------------------------------------- 플래시
+
+function updateTorchButton() {
+  els.btnTorch.classList.toggle('on', state.torch);
+  els.btnTorch.classList.toggle('unsupported', !state.torchSupported);
+}
+
+function checkTorchApplied() {
+  if (!state.torch || !state.track || !state.track.getSettings) return;
+  const s = state.track.getSettings();
+  if (s.torch === false) {
+    state.torch = false;
+    updateTorchButton();
+    showToast('플래시를 켤 수 없습니다. (하드웨어 고장일 수 있어요)');
+  }
+}
+
+els.btnTorch.addEventListener('click', () => {
+  if (state.facing === 'front') {
+    showToast('전면 카메라에는 플래시가 없습니다.');
+    return;
+  }
+  if (!state.torchSupported) {
+    showToast('이 카메라/브라우저에서는 플래시를 켤 수 없습니다. iOS를 최신으로 업데이트하거나 네이티브 앱을 써 주세요.');
+    return;
+  }
+  state.torch = !state.torch;
+  updateTorchButton();
+  syncTrackConstraints();
+});
 
 function setZoom(display) {
   if (state.zoomLocked) return;
@@ -1368,6 +1421,8 @@ document.addEventListener('visibilitychange', () => {
     startCamera();
   } else {
     els.video.play().catch(() => {});
+    // 백그라운드에 다녀오면 iOS 가 플래시를 끈다
+    if (state.torch) syncTrackConstraints();
   }
 });
 
