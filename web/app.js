@@ -56,6 +56,8 @@ const els = {
   btnCopyDiag: $('#btn-copy-diag'),
   btnRescan: $('#btn-rescan'),
   canvas: $('#capture-canvas'),
+  tip: $('#tip'),
+  tipClose: $('#tip-close'),
 };
 
 // ---------------------------------------------------------------- 설정
@@ -70,12 +72,21 @@ function loadSettings() {
   }
 }
 
+const SETTINGS_VERSION = 2;
+
 const settings = Object.assign(
   { backDeviceId: null, backLabel: null, photoRes: 'max', videoRes: '1080', grid: false, sound: true },
   loadSettings()
 );
+if (settings.version !== SETTINGS_VERSION) {
+  // v1 은 한국어 카메라 이름("울트라 와이드")을 못 알아봐서 수동 선택이 저장됐을 수 있다 → 자동 감지로 초기화
+  settings.backDeviceId = null;
+  settings.backLabel = null;
+  settings.version = SETTINGS_VERSION;
+}
 
 function saveSettings() {
+  settings.version = SETTINGS_VERSION;
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (_) { /* 비공개 브라우징 등 */ }
@@ -88,7 +99,8 @@ const RES = {
 const BITRATE = { '4k': 30e6, '1080': 12e6, '720': 6e6 };
 const SW_MAX_FACTOR = 6; // 소프트웨어 줌 최대 배율 (초광각 기준 3×)
 
-const UW_RE = /ultra\s*-?\s*wide|초광각/i;
+// iOS Safari 카메라 이름 예: "Back Ultra Wide Camera", "후면 울트라 와이드 카메라"
+const UW_RE = /ultra\s*-?\s*wide|울트라\s*-?\s*와이드|초광각/i;
 const MULTI_RE = /dual|triple|듀얼|트리플/i;
 const FRONT_RE = /front|전면|facetime/i;
 
@@ -339,7 +351,8 @@ async function startCamera() {
       device = findFrontCamera(state.cameras);
     }
     state.device = device;
-    state.multiplier = state.facing === 'back' && device && UW_RE.test(device.label) ? 0.5 : 1;
+    // 이 앱의 후면 카메라는 초광각이므로 배율 표기는 0.5× 기준
+    state.multiplier = state.facing === 'back' ? 0.5 : 1;
 
     const [w, h] = state.mode === 'photo' ? RES.photo[settings.photoRes] : RES.video[settings.videoRes];
     const video = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: 30 } };
@@ -365,6 +378,11 @@ async function startCamera() {
 
     state.stream = stream;
     state.track = stream.getVideoTracks()[0];
+    const track = state.track;
+    track.addEventListener('ended', () => {
+      // 시스템이 카메라를 끊은 경우에만 다시 연다 (stop() 으로 끈 경우에는 이벤트가 오지 않음)
+      if (state.track === track && !document.hidden) startCamera();
+    });
     els.video.srcObject = stream;
     await els.video.play().catch(() => {});
     await waitForVideoSize();
@@ -377,6 +395,7 @@ async function startCamera() {
     layoutStage();
     setZoom(state.desired[state.facing] || 1);
     updateFormatInfo();
+    maybeShowPermissionTip();
   } catch (e) {
     if (e && e.name === 'OverconstrainedError' && settings.backDeviceId) {
       // 저장해 둔 카메라 ID 가 바뀐 경우
@@ -398,7 +417,7 @@ function describeError(e) {
   if (e instanceof AppError) return e.message;
   switch (e && e.name) {
     case 'NotAllowedError':
-      return '카메라 권한이 거부되었습니다.\n주소창 왼쪽의 “가가” 버튼 → 웹사이트 설정 → 카메라를 “허용”으로 바꾼 뒤 다시 시도해 주세요.';
+      return '카메라 권한이 거부되었습니다.\n설정 앱 → 앱 → Safari → 카메라를 “허용”으로 바꾼 뒤 다시 시도해 주세요.';
     case 'NotFoundError':
       return '카메라를 찾을 수 없습니다.';
     case 'NotReadableError':
@@ -452,14 +471,13 @@ function zoomLimits() {
 
 function zoomPresets() {
   const [, hi] = zoomLimits();
-  const presets = state.multiplier < 1 ? [0.5, 1, 2] : [1, 2];
+  const presets = state.multiplier < 1 ? [0.5, 1] : [1, 2];
   return presets.filter((p) => p <= hi + 0.001);
 }
 
 function zoomText(value) {
   const r = Math.round(value * 10) / 10;
   let s = Number.isInteger(r) ? String(r) : r.toFixed(1);
-  if (s.startsWith('0.')) s = s.slice(1);
   return s + '×';
 }
 
@@ -1110,10 +1128,27 @@ els.video.addEventListener('resize', () => {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (state.recorder) stopRecording();
-    stopStream();
-  } else {
+    // 스트림은 끄지 않는다. 다시 돌아왔을 때 getUserMedia 를 새로 부르지 않아야 권한 창이 덜 뜬다.
+  } else if (!state.stream || !state.track || state.track.readyState === 'ended') {
     startCamera();
+  } else {
+    els.video.play().catch(() => {});
   }
+});
+
+// ---------------------------------------------------------------- 권한 안내
+
+const TIP_KEY = 'rearcam.permissionTipDismissed';
+
+function maybeShowPermissionTip() {
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(TIP_KEY) === '1'; } catch (_) { /* 무시 */ }
+  if (!dismissed) els.tip.hidden = false;
+}
+
+els.tipClose.addEventListener('click', () => {
+  els.tip.hidden = true;
+  try { localStorage.setItem(TIP_KEY, '1'); } catch (_) { /* 무시 */ }
 });
 
 // ---------------------------------------------------------------- 시작

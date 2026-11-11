@@ -201,14 +201,11 @@ extension UIImage.Orientation {
 enum ZoomFormatter {
     static func text(_ value: CGFloat) -> String {
         let rounded = (value * 10).rounded() / 10
-        var s: String
+        let s: String
         if rounded == rounded.rounded() {
             s = String(format: "%.0f", Double(rounded))
         } else {
             s = String(format: "%.1f", Double(rounded))
-        }
-        if s.hasPrefix("0.") {
-            s.removeFirst()
         }
         return s + "×"
     }
