@@ -428,3 +428,21 @@ body.recording #shutter-inner { width: 30px; height: 30px; border-radius: 6px; }
   padding: 10px;
   margin: 0;
 }
+
+/* 권한 안내 */
+#tip {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  top: calc(env(safe-area-inset-top) + 56px);
+  z-index: 25;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(40, 40, 42, 0.97);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+  line-height: 1.6;
+}
+#tip[hidden] { display: none; }
+#tip p { margin: 0 0 12px; }
+#tip button { width: 100%; padding: 10px; font-size: 15px; }

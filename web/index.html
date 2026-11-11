@@ -56,6 +56,14 @@
     </footer>
   </div>
 
+  <div id="tip" hidden>
+    <p><b>카메라 권한을 매번 묻지 않게 하려면</b><br>
+    설정 앱 → 앱 → Safari → (아래쪽 ‘웹 사이트 설정’) <b>카메라</b> → <b>허용</b><br>
+    동영상 소리도 쓰려면 <b>마이크</b>도 허용으로 바꾸세요.<br>
+    <span class="small muted">iOS 17 이하: 설정 → Safari → 카메라</span></p>
+    <button id="tip-close" class="primary">알겠어요</button>
+  </div>
+
   <div id="toast" hidden>
     <span id="toast-text"></span>
     <button id="toast-save">사진 앱에 저장</button>
@@ -128,6 +136,7 @@
       <h3>도움말</h3>
       <ul class="help">
         <li>홈 화면에 추가하면 앱처럼 쓸 수 있습니다. (Safari 공유 버튼 → “홈 화면에 추가”)</li>
+        <li>카메라 권한을 매번 묻지 않게 하려면: 설정 앱 → 앱 → Safari → 카메라(와 마이크) → <b>허용</b>. 웹페이지는 이 창을 스스로 없앨 수 없어서 iOS 설정에서 바꿔야 합니다.</li>
         <li>찍은 사진은 이 웹앱 안에 임시로 보관됩니다. 왼쪽 아래 미리보기를 눌러 <b>사진 앱에 저장</b>하세요.</li>
         <li>1×, 2×는 초광각 카메라를 디지털로 확대한 것입니다. 두 손가락으로 확대/축소할 수 있습니다.</li>
         <li>가로 사진을 찍으려면 제어 센터에서 <b>화면 세로 고정</b>을 끄세요.</li>

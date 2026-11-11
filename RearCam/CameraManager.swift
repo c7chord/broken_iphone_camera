@@ -404,7 +404,7 @@ final class CameraManager: NSObject, ObservableObject {
 
     var zoomPresets: [CGFloat] {
         if position == .back && zoomMultiplier < 1 {
-            return [0.5, 1, 2]
+            return [0.5, 1]
         }
         return [1, 2]
     }
