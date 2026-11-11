@@ -541,6 +541,28 @@ function layoutStage() {
   if (!W || !H) return;
   const base = baseRect();
   const ratio = base.bw && base.bh ? base.bh / base.bw : 4 / 3; // 세로/가로
+
+  if (LANDSCAPE_MQ.matches) {
+    // 가로 화면: 오른쪽 버튼 영역을 뺀 곳에 비율을 지켜서 넣는다 (잘라내지 않음)
+    const right = Math.min(
+      els.zoombar.getBoundingClientRect().left,
+      els.modes.getBoundingClientRect().left,
+      els.bottombar.getBoundingClientRect().left
+    ) - app.left;
+    const areaW = Math.max(1, right);
+    let w = areaW;
+    let h = w * ratio;
+    if (h > H) {
+      h = H;
+      w = h / ratio;
+    }
+    els.stage.style.width = `${Math.round(w)}px`;
+    els.stage.style.height = `${Math.round(h)}px`;
+    els.stage.style.left = `${Math.round((areaW - w) / 2)}px`;
+    els.stage.style.top = `${Math.round((H - h) / 2)}px`;
+    return;
+  }
+
   const top = els.topbar.getBoundingClientRect().bottom - app.top;
   const bottom = els.bottombar.getBoundingClientRect().top - app.top;
   const region = Math.min(W * (4 / 3), bottom - top); // 4:3 미리보기가 들어갈 자리
@@ -559,6 +581,9 @@ function layoutStage() {
   els.stage.style.left = `${Math.round((W - width) / 2)}px`;
   els.stage.style.top = `${Math.round(y)}px`;
 }
+
+const LANDSCAPE_MQ = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
+LANDSCAPE_MQ.addEventListener('change', () => requestAnimationFrame(layoutStage));
 
 const ASPECTS = { '4:3': 4 / 3, '9:16': 16 / 9, '1:1': 1 };
 const ASPECT_ORDER = ['4:3', '9:16', '1:1'];

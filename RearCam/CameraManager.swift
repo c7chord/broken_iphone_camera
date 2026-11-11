@@ -67,6 +67,19 @@ final class CameraManager: NSObject, ObservableObject {
         didSet { UserDefaults.standard.set(shutterSound, forKey: "shutterSound") }
     }
 
+    @Published var photoAspect: PhotoAspect = PhotoAspect(rawValue: UserDefaults.standard.string(forKey: "photoAspect") ?? "") ?? .standard {
+        didSet { UserDefaults.standard.set(photoAspect.rawValue, forKey: "photoAspect") }
+    }
+
+    func cycleAspect() {
+        photoAspect = photoAspect.next
+    }
+
+    /// 세로 화면에서 미리보기의 (세로 / 가로) 비율
+    var previewRatio: CGFloat {
+        mode == .photo ? photoAspect.longShort : 16.0 / 9.0
+    }
+
     // MARK: 세션 (sessionQueue 전용)
 
     let session = AVCaptureSession()
@@ -85,6 +98,7 @@ final class CameraManager: NSObject, ObservableObject {
     private struct FrameCaptureRequest {
         let angle: CGFloat
         let format: PhotoFileFormat
+        let aspect: PhotoAspect
     }
 
     private var pendingFrameCapture: FrameCaptureRequest?
@@ -513,12 +527,13 @@ final class CameraManager: NSObject, ObservableObject {
         guard mode == .photo, isSessionRunning else { return }
         let angle = orientationMonitor.captureAngle(for: position)
         let format = photoFormat
+        let aspect = photoAspect
         if shutterSound { AudioServicesPlaySystemSound(1108) }
 
         switch photoMethod {
         case .videoFrame:
             dataQueue.async {
-                self.pendingFrameCapture = FrameCaptureRequest(angle: angle, format: format)
+                self.pendingFrameCapture = FrameCaptureRequest(angle: angle, format: format, aspect: aspect)
             }
         case .systemPhoto:
             sessionQueue.async { self.captureSystemPhoto(angle: angle, format: format) }
@@ -527,7 +542,8 @@ final class CameraManager: NSObject, ObservableObject {
 
     private func saveFrame(_ pixelBuffer: CVPixelBuffer, attachments: [String: Any]?, request: FrameCaptureRequest) {
         let image = CIImage(cvPixelBuffer: pixelBuffer)
-        guard let cgImage = ciContext.createCGImage(image, from: image.extent) else {
+        let cropRect = request.aspect.centerCrop(image.extent)
+        guard let cgImage = ciContext.createCGImage(image, from: cropRect) else {
             report("프레임을 이미지로 변환하지 못했습니다.")
             return
         }

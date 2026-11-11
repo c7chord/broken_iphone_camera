@@ -62,8 +62,53 @@ enum PhotoMethod: String, CaseIterable, Identifiable {
         case .videoFrame:
             return "동영상과 같은 경로에서 프레임 한 장을 그대로 저장합니다. 고장 난 기기에서도 무지개 왜곡이 생기지 않았던 경로입니다."
         case .systemPhoto:
-            return "iOS 사진 처리 경로(AVCapturePhotoOutput, 속도 우선)를 사용합니다. 무지개 왜곡이 다시 생길 수 있으니 비교 테스트할 때만 쓰세요."
+            return "iOS 사진 처리 경로(AVCapturePhotoOutput, 속도 우선)를 사용합니다. 무지개 왜곡이 다시 생길 수 있으니 비교 테스트할 때만 쓰세요. (사진 비율 설정은 적용되지 않고 항상 4:3으로 찍힙니다)"
         }
+    }
+}
+
+/// 사진 비율. 세로로 들면 3:4 / 9:16 / 1:1, 가로로 들면 4:3 / 16:9 / 1:1 로 저장된다.
+enum PhotoAspect: String, CaseIterable, Identifiable {
+    case standard = "4:3"
+    case tall = "9:16"
+    case square = "1:1"
+
+    var id: String { rawValue }
+    var title: String { rawValue }
+
+    /// 긴 변 / 짧은 변
+    var longShort: CGFloat {
+        switch self {
+        case .standard: return 4.0 / 3.0
+        case .tall: return 16.0 / 9.0
+        case .square: return 1
+        }
+    }
+
+    var next: PhotoAspect {
+        switch self {
+        case .standard: return .tall
+        case .tall: return .square
+        case .square: return .standard
+        }
+    }
+
+    /// 가운데를 기준으로 (긴 변 : 짧은 변) = longShort 가 되도록 자른 영역.
+    /// 센서 버퍼는 항상 가로(긴 변이 가로)이므로 기기를 세로/가로로 들어도 같은 영역이 된다.
+    func centerCrop(_ extent: CGRect) -> CGRect {
+        let r = longShort
+        let w = extent.width
+        let h = extent.height
+        var cw = w
+        var ch = h
+        if w >= h {
+            if w / h > r { cw = h * r } else { ch = w / r }
+        } else {
+            if h / w > r { ch = w * r } else { cw = h / r }
+        }
+        cw = (cw / 2).rounded(.down) * 2
+        ch = (ch / 2).rounded(.down) * 2
+        return CGRect(x: (extent.midX - cw / 2).rounded(), y: (extent.midY - ch / 2).rounded(), width: cw, height: ch)
     }
 }
 

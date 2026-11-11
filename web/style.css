@@ -472,3 +472,37 @@ body.recording #shutter-inner { width: 30px; height: 30px; border-radius: 6px; }
 }
 .pill[hidden] { visibility: hidden; display: inline-block; }
 #message { z-index: 3; }
+
+/* 가로 화면: 비율을 지키며 높이에 맞추고, 버튼은 오른쪽에 세로로 (아이폰 카메라 가로 배치) */
+@media (orientation: landscape) and (max-height: 600px) {
+  #app {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto 1fr auto;
+  }
+  #topbar { grid-column: 1; grid-row: 1; }
+  #zoombar {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: center;
+    flex-direction: column;
+    margin: auto 10px !important;
+  }
+  #modes {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+  }
+  #bottombar {
+    grid-column: 3;
+    grid-row: 1 / 4;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    padding: 14px 16px;
+  }
+  #toast { top: 12px; }
+}
