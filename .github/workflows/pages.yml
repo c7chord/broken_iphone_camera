@@ -26,6 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stamp build version (cache busting)
+        run: |
+          V="${GITHUB_SHA::8}"
+          sed -i "s/__BUILD__/$V/g" web/index.html
+          printf '{"build":"%s"}\n' "$V" > web/version.json
+          grep -c "$V" web/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web

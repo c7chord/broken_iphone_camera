@@ -12,8 +12,8 @@
   <meta name="apple-mobile-web-app-title" content="후면캠">
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="icon" href="icon-180.png">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json?v=__BUILD__">
+  <link rel="stylesheet" href="style.css?v=__BUILD__">
 </head>
 <body>
   <div id="app">
@@ -163,6 +163,7 @@
   </section>
 
   <canvas id="capture-canvas" hidden></canvas>
-  <script src="app.js"></script>
+  <script>window.BUILD = "__BUILD__";</script>
+  <script src="app.js?v=__BUILD__"></script>
 </body>
 </html>
