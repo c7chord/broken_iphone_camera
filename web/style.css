@@ -506,3 +506,18 @@ body.recording #shutter-inner { width: 30px; height: 30px; border-radius: 6px; }
   }
   #toast { top: 12px; }
 }
+
+/* 플래시 버튼 */
+.top-left { display: flex; align-items: center; gap: 4px; }
+#btn-torch { position: relative; color: #fff; }
+#btn-torch .slash {
+  position: absolute;
+  width: 26px;
+  height: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 0 1.5px #000;
+}
+#btn-torch.on { color: var(--accent); }
+#btn-torch.on .slash { display: none; }
+#btn-torch.unsupported { opacity: 0.35; }

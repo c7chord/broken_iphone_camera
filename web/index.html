@@ -18,7 +18,13 @@
 <body>
   <div id="app">
     <header id="topbar">
-      <button id="btn-aspect" class="pill rot" aria-label="사진 비율">4:3</button>
+      <div class="top-left">
+        <button id="btn-torch" class="icon-btn" aria-label="플래시">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M7 2h10l-3.2 7H18L9 22l2.2-9.2H7z"/></svg>
+          <span class="slash"></span>
+        </button>
+        <button id="btn-aspect" class="pill rot" aria-label="사진 비율">4:3</button>
+      </div>
       <div id="status">
         <span id="rec-time" hidden>00:00</span>
         <span id="format-info"></span>

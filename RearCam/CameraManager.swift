@@ -92,6 +92,8 @@ final class CameraManager: NSObject, ObservableObject {
     private var videoInput: AVCaptureDeviceInput?
     private var audioInput: AVCaptureDeviceInput?
     private var outputsPrepared = false
+    /// 사용자가 손전등을 켜 둔 상태인지 (포맷을 바꾸면 iOS 가 손전등을 끄므로 다시 켜기 위해 기억)
+    private var torchWanted = false
 
     // MARK: 데이터 (dataQueue 전용)
 
@@ -164,6 +166,7 @@ final class CameraManager: NSObject, ObservableObject {
         orientationMonitor.stop()
         torchOn = false
         sessionQueue.async {
+            self.torchWanted = false
             if self.session.isRunning { self.session.stopRunning() }
             DispatchQueue.main.async { self.isSessionRunning = false }
         }
@@ -332,6 +335,14 @@ final class CameraManager: NSObject, ObservableObject {
 
         session.commitConfiguration()
 
+        // 포맷이 바뀌면 손전등이 꺼지므로 켜 둔 상태였다면 다시 켠다
+        if torchWanted, c.position == .back {
+            applyTorch(on: true, reportErrors: false)
+        } else if c.position == .front {
+            torchWanted = false
+            DispatchQueue.main.async { self.torchOn = false }
+        }
+
         if wantsPhotoOutput {
             let dims = device.activeFormat.supportedMaxPhotoDimensions
             if let largest = dims.max(by: { Int($0.width) * Int($0.height) < Int($1.width) * Int($1.height) }) {
@@ -495,29 +506,39 @@ final class CameraManager: NSObject, ObservableObject {
 
     private func setTorch(on: Bool) {
         sessionQueue.async {
-            let candidates = [
-                self.videoInput?.device,
-                AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-            ]
-            guard let device = candidates.compactMap({ $0 }).first(where: { $0.position == .back && $0.hasTorch }) else {
-                if on { self.report("손전등을 찾을 수 없습니다.") }
-                return
+            self.torchWanted = on
+            self.applyTorch(on: on, reportErrors: true)
+        }
+    }
+
+    /// sessionQueue 에서 호출
+    private func applyTorch(on: Bool, reportErrors: Bool) {
+        let candidates = [
+            videoInput?.device,
+            AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+        ]
+        guard let device = candidates.compactMap({ $0 }).first(where: { $0.position == .back && $0.hasTorch }) else {
+            torchWanted = false
+            DispatchQueue.main.async { self.torchOn = false }
+            if on && reportErrors { report("손전등을 찾을 수 없습니다.") }
+            return
+        }
+        do {
+            try device.lockForConfiguration()
+            if on {
+                try device.setTorchModeOn(level: AVCaptureDevice.maxAvailableTorchLevel)
+            } else {
+                device.torchMode = .off
             }
-            do {
-                try device.lockForConfiguration()
-                if on {
-                    try device.setTorchModeOn(level: AVCaptureDevice.maxAvailableTorchLevel)
-                } else {
-                    device.torchMode = .off
-                }
-                device.unlockForConfiguration()
-                let isOn = device.torchMode == .on
-                DispatchQueue.main.async { self.torchOn = isOn }
-                if on && !isOn { self.report("손전등을 켤 수 없습니다. (하드웨어 고장일 수 있습니다)") }
-            } catch {
-                DispatchQueue.main.async { self.torchOn = false }
-                if on { self.report("손전등을 켤 수 없습니다: \(error.localizedDescription)") }
-            }
+            device.unlockForConfiguration()
+            let isOn = device.torchMode == .on
+            if on && !isOn { torchWanted = false }
+            DispatchQueue.main.async { self.torchOn = isOn }
+            if on && !isOn && reportErrors { report("손전등을 켤 수 없습니다. (하드웨어 고장일 수 있습니다)") }
+        } catch {
+            torchWanted = false
+            DispatchQueue.main.async { self.torchOn = false }
+            if on && reportErrors { report("손전등을 켤 수 없습니다: \(error.localizedDescription)") }
         }
     }
 
