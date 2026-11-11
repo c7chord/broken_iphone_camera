@@ -1441,7 +1441,35 @@ els.tipClose.addEventListener('click', () => {
   try { localStorage.setItem(TIP_KEY, '1'); } catch (_) { /* 무시 */ }
 });
 
+// ---------------------------------------------------------------- 업데이트 확인
+
+/**
+ * 배포할 때 index.html 의 __BUILD__ 와 version.json 이 커밋 해시로 바뀐다.
+ * 아이폰(특히 홈 화면 앱)이 예전 파일을 캐시해 두는 경우가 있어서,
+ * 서버의 버전이 다르면 주소에 ?v=새버전 을 붙여 다시 연다 (캐시를 우회).
+ */
+function checkForUpdate() {
+  const build = window.BUILD;
+  if (!build || build.startsWith('__') || state.recorder) return;
+  fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((info) => {
+      if (!info || !info.build || info.build === build || state.recorder) return;
+      const url = new URL(location.href);
+      if (url.searchParams.get('v') === info.build) return; // 같은 버전으로 계속 새로고침하지 않도록
+      url.searchParams.set('v', info.build);
+      location.replace(url.toString());
+    })
+    .catch(() => {});
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) checkForUpdate();
+});
+
 // ---------------------------------------------------------------- 시작
+
+checkForUpdate();
 
 if (!ASPECTS[settings.aspect]) settings.aspect = '4:3';
 updateAspectButton();
