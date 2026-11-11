@@ -1,0 +1,305 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+/* Begin PBXBuildFile section */
+		A0C0FFEE00000000000000C8 /* RearCamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000064 /* RearCamApp.swift */; };
+		A0C0FFEE00000000000000C9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000065 /* ContentView.swift */; };
+		A0C0FFEE00000000000000CA /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000066 /* CameraManager.swift */; };
+		A0C0FFEE00000000000000CB /* CameraTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000067 /* CameraTypes.swift */; };
+		A0C0FFEE00000000000000CC /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000068 /* CameraPreview.swift */; };
+		A0C0FFEE00000000000000CD /* MovieRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000069 /* MovieRecorder.swift */; };
+		A0C0FFEE00000000000000CE /* OrientationMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE000000000000006A /* OrientationMonitor.swift */; };
+		A0C0FFEE00000000000000CF /* PhotoLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE000000000000006B /* PhotoLibrary.swift */; };
+		A0C0FFEE00000000000000D0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE000000000000006C /* SettingsView.swift */; };
+		A0C0FFEE000000000000012D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE000000000000012C /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A0C0FFEE0000000000000001 /* RearCam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RearCam.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0C0FFEE0000000000000064 /* RearCamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RearCamApp.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000065 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000066 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000067 /* CameraTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraTypes.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000068 /* CameraPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreview.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000069 /* MovieRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieRecorder.swift; sourceTree = "<group>"; };
+		A0C0FFEE000000000000006A /* OrientationMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationMonitor.swift; sourceTree = "<group>"; };
+		A0C0FFEE000000000000006B /* PhotoLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibrary.swift; sourceTree = "<group>"; };
+		A0C0FFEE000000000000006C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A0C0FFEE000000000000012C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A0C0FFEE0000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A0C0FFEE0000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				A0C0FFEE0000000000000003 /* RearCam */,
+				A0C0FFEE0000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A0C0FFEE0000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A0C0FFEE0000000000000001 /* RearCam.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A0C0FFEE0000000000000003 /* RearCam */ = {
+			isa = PBXGroup;
+			children = (
+				A0C0FFEE0000000000000064 /* RearCamApp.swift */,
+				A0C0FFEE0000000000000065 /* ContentView.swift */,
+				A0C0FFEE0000000000000066 /* CameraManager.swift */,
+				A0C0FFEE0000000000000067 /* CameraTypes.swift */,
+				A0C0FFEE0000000000000068 /* CameraPreview.swift */,
+				A0C0FFEE0000000000000069 /* MovieRecorder.swift */,
+				A0C0FFEE000000000000006A /* OrientationMonitor.swift */,
+				A0C0FFEE000000000000006B /* PhotoLibrary.swift */,
+				A0C0FFEE000000000000006C /* SettingsView.swift */,
+				A0C0FFEE000000000000012C /* Assets.xcassets */,
+			);
+			path = RearCam;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A0C0FFEE0000000000000006 /* RearCam */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0C0FFEE000000000000000B /* Build configuration list for PBXNativeTarget "RearCam" */;
+			buildPhases = (
+				A0C0FFEE0000000000000007 /* Sources */,
+				A0C0FFEE0000000000000008 /* Frameworks */,
+				A0C0FFEE0000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RearCam;
+			productName = RearCam;
+			productReference = A0C0FFEE0000000000000001 /* RearCam.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A0C0FFEE0000000000000005 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A0C0FFEE0000000000000006 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A0C0FFEE000000000000000A /* Build configuration list for PBXProject "RearCam" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ko;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				ko,
+				Base,
+			);
+			mainGroup = A0C0FFEE0000000000000002;
+			productRefGroup = A0C0FFEE0000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A0C0FFEE0000000000000006 /* RearCam */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A0C0FFEE0000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0C0FFEE000000000000012D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A0C0FFEE0000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A0C0FFEE00000000000000C8 /* RearCamApp.swift in Sources */,
+				A0C0FFEE00000000000000C9 /* ContentView.swift in Sources */,
+				A0C0FFEE00000000000000CA /* CameraManager.swift in Sources */,
+				A0C0FFEE00000000000000CB /* CameraTypes.swift in Sources */,
+				A0C0FFEE00000000000000CC /* CameraPreview.swift in Sources */,
+				A0C0FFEE00000000000000CD /* MovieRecorder.swift in Sources */,
+				A0C0FFEE00000000000000CE /* OrientationMonitor.swift in Sources */,
+				A0C0FFEE00000000000000CF /* PhotoLibrary.swift in Sources */,
+				A0C0FFEE00000000000000D0 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A0C0FFEE000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A0C0FFEE000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A0C0FFEE000000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "후면캠";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "초광각 후면 카메라로 사진과 동영상을 찍기 위해 카메라 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "동영상에 소리를 녹음하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "찍은 사진과 동영상을 사진 앱에 저장하기 위해 필요합니다.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.rearcam;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A0C0FFEE000000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "후면캠";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "초광각 후면 카메라로 사진과 동영상을 찍기 위해 카메라 접근이 필요합니다.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "동영상에 소리를 녹음하기 위해 마이크 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "찍은 사진과 동영상을 사진 앱에 저장하기 위해 필요합니다.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.rearcam;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A0C0FFEE000000000000000A /* Build configuration list for PBXProject "RearCam" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0C0FFEE000000000000000C /* Debug */,
+				A0C0FFEE000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0C0FFEE000000000000000B /* Build configuration list for PBXNativeTarget "RearCam" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0C0FFEE000000000000000E /* Debug */,
+				A0C0FFEE000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A0C0FFEE0000000000000005 /* Project object */;
+}

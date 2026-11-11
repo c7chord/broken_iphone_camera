@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>후면캠</title>
+  <meta name="description" content="광각 카메라가 고장 난 아이폰에서 초광각 카메라만으로 사진과 동영상을 찍는 웹앱">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="후면캠">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <span class="spacer-btn"></span>
+      <div id="status">
+        <span id="rec-time" hidden>00:00</span>
+        <span id="format-info"></span>
+      </div>
+      <button id="btn-settings" class="icon-btn rot" aria-label="설정">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+      </button>
+    </header>
+
+    <main id="viewport">
+      <div id="stage">
+        <video id="video" autoplay muted playsinline></video>
+        <div id="grid" hidden></div>
+        <div id="flash"></div>
+      </div>
+      <div id="message" hidden>
+        <p id="message-text"></p>
+        <button id="btn-start" class="primary">다시 시도</button>
+      </div>
+    </main>
+
+    <div id="zoombar"></div>
+
+    <nav id="modes">
+      <button data-mode="photo" class="active">사진</button>
+      <button data-mode="video">동영상</button>
+    </nav>
+
+    <footer id="bottombar">
+      <button id="btn-gallery" class="thumb rot" aria-label="찍은 사진 보기"><img id="thumb-img" alt="" hidden><span id="badge" hidden></span></button>
+      <button id="btn-shutter" aria-label="촬영"><span id="shutter-inner"></span></button>
+      <button id="btn-flip" class="icon-btn round rot" aria-label="카메라 전환">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 5V2L8 6l4 4V7a5 5 0 0 1 5 5 5 5 0 0 1-.6 2.4l1.5 1.5A7 7 0 0 0 19 12a7 7 0 0 0-7-7zm0 12a5 5 0 0 1-5-5c0-.9.2-1.7.6-2.4L6.1 8.1A7 7 0 0 0 5 12a7 7 0 0 0 7 7v3l4-4-4-4z"/></svg>
+      </button>
+    </footer>
+  </div>
+
+  <div id="toast" hidden>
+    <span id="toast-text"></span>
+    <button id="toast-save">사진 앱에 저장</button>
+  </div>
+
+  <!-- 갤러리 -->
+  <section id="gallery" class="sheet" hidden>
+    <header class="sheet-head">
+      <button class="link" data-close="gallery">닫기</button>
+      <h2>이번에 찍은 것</h2>
+      <button class="link" id="btn-clear">모두 삭제</button>
+    </header>
+    <div id="gallery-grid"></div>
+    <p id="gallery-empty" class="muted center">아직 찍은 사진이 없습니다.</p>
+    <div class="sheet-foot">
+      <button id="btn-save-all" class="primary wide">전부 사진 앱에 저장</button>
+      <p class="muted small">공유 창에서 <b>“이미지 저장”</b> 또는 <b>“비디오 저장”</b>을 누르면 사진 앱에 들어갑니다.</p>
+    </div>
+  </section>
+
+  <!-- 보기 -->
+  <section id="viewer" class="sheet dark" hidden>
+    <header class="sheet-head">
+      <button class="link" data-close="viewer">닫기</button>
+      <h2 id="viewer-title"></h2>
+      <button class="link danger" id="viewer-delete">삭제</button>
+    </header>
+    <div id="viewer-body"></div>
+    <div class="sheet-foot">
+      <button id="viewer-save" class="primary wide">사진 앱에 저장</button>
+    </div>
+  </section>
+
+  <!-- 설정 -->
+  <section id="settings" class="sheet" hidden>
+    <header class="sheet-head">
+      <span></span>
+      <h2>설정</h2>
+      <button class="link" data-close="settings">완료</button>
+    </header>
+    <div class="form">
+      <h3>후면 카메라</h3>
+      <label class="row">
+        <span>사용할 카메라</span>
+        <select id="set-camera"></select>
+      </label>
+      <p class="muted small">“초광각(Ultra Wide)” 카메라를 고르세요. 고장 난 “후면 카메라(Back Camera)”나 “듀얼 광각(Dual Wide)”은 쓰지 마세요.</p>
+
+      <h3>화질</h3>
+      <label class="row">
+        <span>사진</span>
+        <select id="set-photo-res">
+          <option value="max">최대 (4032×3024 요청)</option>
+          <option value="mid">1920×1440</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>동영상</span>
+        <select id="set-video-res">
+          <option value="1080">1080p</option>
+          <option value="4k">4K</option>
+          <option value="720">720p</option>
+        </select>
+      </label>
+
+      <h3>화면 · 소리</h3>
+      <label class="row"><span>격자</span><input type="checkbox" id="set-grid"></label>
+      <label class="row"><span>셔터음</span><input type="checkbox" id="set-sound"></label>
+
+      <h3>도움말</h3>
+      <ul class="help">
+        <li>홈 화면에 추가하면 앱처럼 쓸 수 있습니다. (Safari 공유 버튼 → “홈 화면에 추가”)</li>
+        <li>찍은 사진은 이 웹앱 안에 임시로 보관됩니다. 왼쪽 아래 미리보기를 눌러 <b>사진 앱에 저장</b>하세요.</li>
+        <li>1×, 2×는 초광각 카메라를 디지털로 확대한 것입니다. 두 손가락으로 확대/축소할 수 있습니다.</li>
+        <li>가로 사진을 찍으려면 제어 센터에서 <b>화면 세로 고정</b>을 끄세요.</li>
+      </ul>
+
+      <h3>진단 정보</h3>
+      <pre id="diag">-</pre>
+      <button id="btn-copy-diag" class="secondary wide">진단 정보 복사</button>
+      <button id="btn-rescan" class="secondary wide">카메라 다시 찾기</button>
+    </div>
+  </section>
+
+  <canvas id="capture-canvas" hidden></canvas>
+  <script src="app.js"></script>
+</body>
+</html>

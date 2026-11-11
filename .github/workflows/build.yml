@@ -1,0 +1,47 @@
+name: Build unsigned IPA
+
+on:
+  push:
+    paths:
+      - "RearCam/**"
+      - "RearCam.xcodeproj/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Build (iphoneos, unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project RearCam.xcodeproj \
+            -scheme RearCam \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/RearCam.app Payload/
+          zip -qry RearCam-unsigned.ipa Payload
+          ls -lh RearCam-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RearCam-unsigned-ipa
+          path: RearCam-unsigned.ipa
+          retention-days: 30

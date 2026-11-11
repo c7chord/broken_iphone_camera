@@ -1,0 +1,16 @@
+{
+  "name": "후면캠",
+  "short_name": "후면캠",
+  "description": "광각 카메라가 고장 난 아이폰에서 초광각 카메라만으로 사진과 동영상을 찍는 웹앱",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
