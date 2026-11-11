@@ -123,11 +123,18 @@
       <label class="row">
         <span>동영상</span>
         <select id="set-video-res">
+          <option value="4k">4K (권장)</option>
           <option value="1080">1080p</option>
-          <option value="4k">4K</option>
           <option value="720">720p</option>
         </select>
       </label>
+
+      <label class="row"><span>선명하게 보정</span><input type="checkbox" id="set-sharpen"></label>
+      <p class="muted small">1×는 초광각 화면을 잘라서 만들기 때문에 화소가 적습니다. 가장 큰 해상도로 받은 뒤, 잘라낸 사진을 고품질로 키우고 선명하게 보정합니다. 디테일이 가장 많이 남는 건 <b>0.5×</b>입니다.</p>
+
+      <h3>저장</h3>
+      <label class="row"><span>찍자마자 저장 창 열기</span><input type="checkbox" id="set-autosave"></label>
+      <p class="muted small">촬영하면 바로 공유 창이 뜹니다. <b>“이미지 저장”</b>/<b>“비디오 저장”</b>을 누르면 사진 앱에 들어갑니다. (iOS는 웹페이지가 사진 앱에 직접 저장하는 것을 허용하지 않아서 이 한 번의 탭은 꼭 필요합니다)</p>
 
       <h3>화면 · 소리</h3>
       <label class="row"><span>격자</span><input type="checkbox" id="set-grid"></label>

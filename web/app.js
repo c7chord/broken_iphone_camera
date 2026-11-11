@@ -52,6 +52,8 @@ const els = {
   setVideoRes: $('#set-video-res'),
   setGrid: $('#set-grid'),
   setSound: $('#set-sound'),
+  setAutoSave: $('#set-autosave'),
+  setSharpen: $('#set-sharpen'),
   diag: $('#diag'),
   btnCopyDiag: $('#btn-copy-diag'),
   btnRescan: $('#btn-rescan'),
@@ -72,18 +74,22 @@ function loadSettings() {
   }
 }
 
-const SETTINGS_VERSION = 2;
+const SETTINGS_VERSION = 3;
 
 const settings = Object.assign(
-  { backDeviceId: null, backLabel: null, photoRes: 'max', videoRes: '1080', grid: false, sound: true },
+  { backDeviceId: null, backLabel: null, photoRes: 'max', videoRes: '4k', grid: false, sound: true, autoSave: true, sharpen: true },
   loadSettings()
 );
-if (settings.version !== SETTINGS_VERSION) {
+if (!settings.version || settings.version < 2) {
   // v1 은 한국어 카메라 이름("울트라 와이드")을 못 알아봐서 수동 선택이 저장됐을 수 있다 → 자동 감지로 초기화
   settings.backDeviceId = null;
   settings.backLabel = null;
-  settings.version = SETTINGS_VERSION;
 }
+if (!settings.version || settings.version < 3) {
+  // 1× 는 화면을 잘라서 만드므로 1080p 원본으로는 960×540 밖에 안 남는다 → 4K 를 기본으로
+  if (settings.videoRes === '1080') settings.videoRes = '4k';
+}
+settings.version = SETTINGS_VERSION;
 
 function saveSettings() {
   settings.version = SETTINGS_VERSION;
@@ -185,7 +191,7 @@ async function loadItems() {
   updateThumb();
 }
 
-async function addItem(type, blob, ext, thumb) {
+function addItem(type, blob, ext, thumb) {
   const item = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     type,
@@ -197,15 +203,40 @@ async function addItem(type, blob, ext, thumb) {
   };
   state.items.push(item);
   if (state.dbOk) {
-    try {
-      await db.put(item);
-    } catch (e) {
+    db.put(item).catch(() => {
       state.dbOk = false;
-      showToast('저장 공간 문제로 앱을 닫으면 사라질 수 있어요. 바로 사진 앱에 저장하세요.', item);
-    }
+    });
   }
   updateThumb();
   return item;
+}
+
+function canShareFiles() {
+  try {
+    return !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'a.jpg', { type: 'image/jpeg' })] }));
+  } catch (_) {
+    return false;
+  }
+}
+
+/** 촬영 직후 공유 시트를 띄운다. 실패(탭 이벤트 만료 등)하거나 취소하면 저장 버튼 토스트로 대체. */
+function autoSaveItem(item, label) {
+  if (settings.autoSave && canShareFiles()) {
+    shareItems([item], { quiet: true }).then((ok) => {
+      if (!ok) showToast(label, item);
+    });
+  } else {
+    showToast(label, item);
+  }
+}
+
+function dataUrlToBlob(url) {
+  const comma = url.indexOf(',');
+  const mime = (url.slice(0, comma).match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const binary = atob(url.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
 }
 
 async function removeItem(item) {
@@ -228,7 +259,7 @@ function mimeOf(item) {
 }
 
 /** 공유 시트를 연다. 반드시 사용자 탭 이벤트 안에서 호출해야 한다. */
-async function shareItems(items) {
+async function shareItems(items, { quiet = false } = {}) {
   if (!items.length) return false;
   const files = items.map((it) => new File([it.blob], fileName(it), { type: mimeOf(it) }));
 
@@ -237,7 +268,7 @@ async function shareItems(items) {
       await navigator.share({ files });
     } catch (e) {
       if (e && e.name === 'AbortError') return false;
-      alert('공유 창을 열지 못했습니다: ' + (e && e.message ? e.message : e));
+      if (!quiet) alert('공유 창을 열지 못했습니다: ' + (e && e.message ? e.message : e));
       return false;
     }
   } else {
@@ -387,6 +418,8 @@ async function startCamera() {
     await els.video.play().catch(() => {});
     await waitForVideoSize();
 
+    if (state.mode === 'photo') await upgradePhotoResolution();
+
     const caps = state.track && state.track.getCapabilities ? state.track.getCapabilities() : {};
     state.hwZoom = caps && caps.zoom && caps.zoom.max > caps.zoom.min
       ? { min: caps.zoom.min, max: caps.zoom.max }
@@ -411,6 +444,61 @@ async function startCamera() {
       startCamera();
     }
   }
+}
+
+/** 가장 큰 4:3 영역의 넓이 */
+function photoArea(w, h) {
+  const long = Math.max(w, h);
+  const short = Math.min(w, h);
+  const cl = Math.min(long, (short * 4) / 3);
+  return cl * ((cl * 3) / 4);
+}
+
+function waitForDimensionChange(oldW, oldH, timeout = 1500) {
+  const v = els.video;
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      if ((v.videoWidth !== oldW || v.videoHeight !== oldH) || Date.now() - start > timeout) resolve();
+      else setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
+
+/**
+ * Safari 가 4:3 을 작게(예: 1920×1440) 줄 때가 있다.
+ * 그럴 때는 4K(3840×2160)로 받아 가운데 4:3(2880×2160)만 쓰는 편이 화소가 더 많다.
+ * 권한 창이 다시 뜨지 않도록 getUserMedia 대신 applyConstraints 로 바꿔 본다.
+ */
+async function upgradePhotoResolution() {
+  const v = els.video;
+  const track = state.track;
+  if (!track || !track.applyConstraints) return;
+  const before = photoArea(v.videoWidth, v.videoHeight);
+  if (before >= 4032 * 3024 * 0.95) return;
+
+  const prev = state.videoConstraints;
+  const alt = Object.assign({}, prev, { width: { ideal: 3840 }, height: { ideal: 2160 } });
+  let w = v.videoWidth;
+  let h = v.videoHeight;
+  try {
+    await track.applyConstraints(alt);
+    await waitForDimensionChange(w, h);
+  } catch (_) {
+    return;
+  }
+  if (photoArea(v.videoWidth, v.videoHeight) > before * 1.05) {
+    state.videoConstraints = alt;
+    return;
+  }
+  // 나아지지 않았으면 원래대로
+  w = v.videoWidth;
+  h = v.videoHeight;
+  try {
+    await track.applyConstraints(prev);
+    await waitForDimensionChange(w, h);
+  } catch (_) { /* 무시 */ }
 }
 
 function describeError(e) {
@@ -440,8 +528,9 @@ function hideMessage() {
 
 function layoutStage() {
   const box = els.viewport.getBoundingClientRect();
-  const vw = els.video.videoWidth;
-  const vh = els.video.videoHeight;
+  const base = baseRect();
+  const vw = base.bw;
+  const vh = base.bh;
   if (!vw || !vh || !box.width || !box.height) {
     els.stage.style.width = `${Math.floor(box.width)}px`;
     els.stage.style.height = `${Math.floor(box.height)}px`;
@@ -458,7 +547,8 @@ function updateFormatInfo() {
   if (state.facing === 'back') name = state.multiplier < 1 ? '초광각' : (state.device ? state.device.label : '후면');
   const s = state.track && state.track.getSettings ? state.track.getSettings() : {};
   const fps = s.frameRate ? ` · ${Math.round(s.frameRate)}fps` : '';
-  els.formatInfo.textContent = v.videoWidth ? `${name} · ${v.videoWidth}×${v.videoHeight}${fps}` : '';
+  const zoomKind = state.hwZoom ? 'HW줌' : 'SW줌';
+  els.formatInfo.textContent = v.videoWidth ? `${name} · ${v.videoWidth}×${v.videoHeight}${fps} · ${zoomKind}` : '';
 }
 
 // ---------------------------------------------------------------- 줌
@@ -583,14 +673,73 @@ function makeThumb(source, sx, sy, sw, sh) {
   return c.toDataURL('image/jpeg', 0.7);
 }
 
-function cropRect() {
+/** 줌을 빼고, 결과물로 쓸 영역 (사진 모드는 4:3, 동영상 모드는 스트림 그대로) */
+function baseRect() {
   const v = els.video;
   const w = v.videoWidth;
   const h = v.videoHeight;
+  let bw = w;
+  let bh = h;
+  if (state.mode === 'photo' && w && h) {
+    const ratio = h > w ? 3 / 4 : 4 / 3; // 가로/세로
+    if (w / h > ratio) bw = Math.round(h * ratio);
+    else bh = Math.round(w / ratio);
+  }
+  return { w, h, bw, bh };
+}
+
+function cropRect() {
+  const { w, h, bw, bh } = baseRect();
   const f = state.swFactor;
-  const cw = Math.round(w / f);
-  const ch = Math.round(h / f);
-  return { w, h, sx: Math.round((w - cw) / 2), sy: Math.round((h - ch) / 2), cw, ch };
+  const cw = Math.round(bw / f);
+  const ch = Math.round(bh / f);
+  return { w, h, bw, bh, sx: Math.round((w - cw) / 2), sy: Math.round((h - ch) / 2), cw, ch };
+}
+
+/**
+ * 결과물 크기: 소프트웨어 줌으로 잘라낸 경우 최대 2배까지 고품질로 키운다. (긴 변 최대 4032)
+ */
+function outputSize(r) {
+  const up = Math.max(1, Math.min(state.swFactor, 2, 4032 / Math.max(r.cw, r.ch)));
+  return { ow: Math.round(r.cw * up), oh: Math.round(r.ch * up), upscaled: up > 1.01 };
+}
+
+/** 3×3 언샤프 마스크. 키운 이미지의 흐릿함을 줄인다. */
+function sharpen(ctx, w, h, amount) {
+  const img = ctx.getImageData(0, 0, w, h);
+  const px = img.data;
+  const stride = w * 4;
+  let prevRow = px.slice(0, stride);
+  for (let y = 1; y < h - 1; y++) {
+    const off = y * stride;
+    const curRow = px.slice(off, off + stride);
+    const next = off + stride;
+    for (let x = 4; x < stride - 4; x++) {
+      if ((x & 3) === 3) continue; // 알파
+      const c = curRow[x];
+      const lap = 4 * c - curRow[x - 4] - curRow[x + 4] - prevRow[x] - px[next + x];
+      px[off + x] = c + amount * lap;
+    }
+    prevRow = curRow;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/** 현재 프레임을 결과물 캔버스에 그린다 (자르기 + 확대 + 선명도) */
+function renderPhoto(c) {
+  const v = els.video;
+  const r = cropRect();
+  const { ow, oh, upscaled } = outputSize(r);
+  c.width = ow;
+  c.height = oh;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(v, r.sx, r.sy, r.cw, r.ch, 0, 0, ow, oh);
+  if (settings.sharpen) {
+    try { sharpen(ctx, ow, oh, upscaled ? 0.45 : 0.2); } catch (_) { /* 메모리 부족 등: 보정 없이 저장 */ }
+  }
+  return { ow, oh, ctx };
 }
 
 async function capturePhoto() {
@@ -599,23 +748,35 @@ async function capturePhoto() {
   playSound('shutter');
   flashScreen();
 
-  const r = cropRect();
   const c = els.canvas;
-  c.width = r.cw;
-  c.height = r.ch;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(v, r.sx, r.sy, r.cw, r.ch, 0, 0, r.cw, r.ch);
-  const thumb = makeThumb(c, 0, 0, r.cw, r.ch);
-  const blob = await new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.93));
+  const { ow, oh } = renderPhoto(c);
+  const thumb = makeThumb(c, 0, 0, ow, oh);
+  const label = `사진 ${ow}×${oh}`;
+
+  if (settings.autoSave && canShareFiles()) {
+    // iOS 는 탭 이벤트가 살아 있는 동안에만 공유 시트를 열 수 있으므로, 기다리지 않고(동기) 바로 만든다.
+    let blob = null;
+    try {
+      blob = dataUrlToBlob(c.toDataURL('image/jpeg', 0.95));
+    } catch (_) { /* 아래에서 처리 */ }
+    c.width = 1;
+    c.height = 1;
+    if (!blob || !blob.size) {
+      showToast('사진을 만들지 못했습니다.');
+      return;
+    }
+    autoSaveItem(addItem('photo', blob, 'jpg', thumb), label);
+    return;
+  }
+
+  const blob = await new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.95));
   c.width = 1;
   c.height = 1;
-
   if (!blob) {
     showToast('사진을 만들지 못했습니다.');
     return;
   }
-  const item = await addItem('photo', blob, 'jpg', thumb);
-  showToast(`사진 ${r.cw}×${r.ch}`, item);
+  showToast(label, addItem('photo', blob, 'jpg', thumb));
 }
 
 function flashScreen() {
@@ -653,13 +814,13 @@ function startRecording() {
   if (!state.hwZoom) {
     if (state.swFactor > 1.001) {
       // 소프트웨어 줌: 잘라낸 화면을 캔버스에 그려서 녹화 (녹화 중에도 확대/축소 가능)
-      const w = v.videoWidth;
-      const h = v.videoHeight;
+      const { bw: w, bh: h } = baseRect();
       const scale = Math.min(1, 1920 / Math.max(w, h));
       const c = document.createElement('canvas');
       c.width = Math.round((w * scale) / 2) * 2;
       c.height = Math.round((h * scale) / 2) * 2;
       const ctx = c.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
       const draw = () => {
         const r = cropRect();
         ctx.drawImage(v, r.sx, r.sy, r.cw, r.ch, 0, 0, c.width, c.height);
@@ -699,7 +860,7 @@ function startRecording() {
   recorder.ondataavailable = (e) => {
     if (e.data && e.data.size) chunks.push(e.data);
   };
-  recorder.onstop = async () => {
+  recorder.onstop = () => {
     cleanupRecording();
     const type = recorder.mimeType || mime || 'video/mp4';
     const blob = new Blob(chunks, { type });
@@ -708,8 +869,8 @@ function startRecording() {
       return;
     }
     const ext = type.includes('webm') ? 'webm' : 'mp4';
-    const item = await addItem('video', blob, ext, thumb);
-    showToast(`동영상 ${formatTime((Date.now() - startedAt) / 1000)}`, item);
+    const item = addItem('video', blob, ext, thumb);
+    autoSaveItem(item, `동영상 ${formatTime((Date.now() - startedAt) / 1000)}`);
   };
   recorder.onerror = (e) => {
     showToast('녹화 오류: ' + (e && e.error ? e.error.message : ''));
@@ -992,6 +1153,8 @@ function syncSettingsForm() {
   els.setVideoRes.value = settings.videoRes;
   els.setGrid.checked = settings.grid;
   els.setSound.checked = settings.sound;
+  els.setAutoSave.checked = settings.autoSave;
+  els.setSharpen.checked = settings.sharpen;
   els.grid.hidden = !settings.grid;
 }
 
@@ -1026,6 +1189,16 @@ els.setVideoRes.addEventListener('change', () => {
 els.setGrid.addEventListener('change', () => {
   settings.grid = els.setGrid.checked;
   els.grid.hidden = !settings.grid;
+  saveSettings();
+});
+
+els.setSharpen.addEventListener('change', () => {
+  settings.sharpen = els.setSharpen.checked;
+  saveSettings();
+});
+
+els.setAutoSave.addEventListener('change', () => {
+  settings.autoSave = els.setAutoSave.checked;
   saveSettings();
 });
 
