@@ -15,6 +15,9 @@ const $ = (sel) => document.querySelector(sel);
 
 const els = {
   app: $('#app'),
+  topbar: $('#topbar'),
+  bottombar: $('#bottombar'),
+  btnAspect: $('#btn-aspect'),
   video: $('#video'),
   stage: $('#stage'),
   viewport: $('#viewport'),
@@ -77,7 +80,7 @@ function loadSettings() {
 const SETTINGS_VERSION = 3;
 
 const settings = Object.assign(
-  { backDeviceId: null, backLabel: null, photoRes: 'max', videoRes: '4k', grid: false, sound: true, autoSave: true, sharpen: true },
+  { backDeviceId: null, backLabel: null, photoRes: 'max', videoRes: '4k', grid: false, sound: true, autoSave: true, sharpen: true, aspect: '4:3' },
   loadSettings()
 );
 if (!settings.version || settings.version < 2) {
@@ -526,20 +529,52 @@ function hideMessage() {
   els.message.hidden = true;
 }
 
+/**
+ * 아이폰 카메라 앱처럼 미리보기를 화면 가로폭에 꽉 채운다.
+ * - 4:3 / 1:1: 상단 바 바로 아래, 4:3 영역 안에 배치 (아래쪽 줌·모드 버튼은 미리보기 위에 겹침)
+ * - 9:16 처럼 긴 화면: 화면 가운데에 두고 버튼들이 위에 겹친다
+ */
 function layoutStage() {
-  const box = els.viewport.getBoundingClientRect();
+  const app = els.app.getBoundingClientRect();
+  const W = app.width;
+  const H = app.height;
+  if (!W || !H) return;
   const base = baseRect();
-  const vw = base.bw;
-  const vh = base.bh;
-  if (!vw || !vh || !box.width || !box.height) {
-    els.stage.style.width = `${Math.floor(box.width)}px`;
-    els.stage.style.height = `${Math.floor(box.height)}px`;
-    return;
+  const ratio = base.bw && base.bh ? base.bh / base.bw : 4 / 3; // 세로/가로
+  const top = els.topbar.getBoundingClientRect().bottom - app.top;
+  const bottom = els.bottombar.getBoundingClientRect().top - app.top;
+  const region = Math.min(W * (4 / 3), bottom - top); // 4:3 미리보기가 들어갈 자리
+
+  const width = W;
+  const height = W * ratio;
+  let y;
+  if (height <= region + 1) {
+    y = top + (region - height) / 2;
+  } else {
+    // 화면보다 길면 가로를 꽉 채우고 위아래를 화면 밖으로 살짝 넘긴다 (좌우 여백 없음)
+    y = (H - height) / 2;
   }
-  const scale = Math.min(box.width / vw, box.height / vh);
-  els.stage.style.width = `${Math.floor(vw * scale)}px`;
-  els.stage.style.height = `${Math.floor(vh * scale)}px`;
+  els.stage.style.width = `${Math.round(width)}px`;
+  els.stage.style.height = `${Math.round(height)}px`;
+  els.stage.style.left = `${Math.round((W - width) / 2)}px`;
+  els.stage.style.top = `${Math.round(y)}px`;
 }
+
+const ASPECTS = { '4:3': 4 / 3, '9:16': 16 / 9, '1:1': 1 };
+const ASPECT_ORDER = ['4:3', '9:16', '1:1'];
+
+function updateAspectButton() {
+  els.btnAspect.textContent = settings.aspect;
+  els.btnAspect.hidden = state.mode !== 'photo';
+}
+
+els.btnAspect.addEventListener('click', () => {
+  const i = ASPECT_ORDER.indexOf(settings.aspect);
+  settings.aspect = ASPECT_ORDER[(i + 1) % ASPECT_ORDER.length];
+  saveSettings();
+  updateAspectButton();
+  layoutStage();
+});
 
 function updateFormatInfo() {
   const v = els.video;
@@ -681,7 +716,8 @@ function baseRect() {
   let bw = w;
   let bh = h;
   if (state.mode === 'photo' && w && h) {
-    const ratio = h > w ? 3 / 4 : 4 / 3; // 가로/세로
+    const longShort = ASPECTS[settings.aspect] || 4 / 3;
+    const ratio = h > w ? 1 / longShort : longShort; // 가로/세로
     if (w / h > ratio) bw = Math.round(h * ratio);
     else bh = Math.round(w / ratio);
   }
@@ -1269,6 +1305,7 @@ els.modes.querySelectorAll('button').forEach((btn) => {
     if (mode === state.mode) return;
     state.mode = mode;
     document.body.classList.toggle('mode-video', mode === 'video');
+    updateAspectButton();
     els.modes.querySelectorAll('button').forEach((b) => b.classList.toggle('active', b === btn));
     startCamera();
   });
@@ -1326,6 +1363,8 @@ els.tipClose.addEventListener('click', () => {
 
 // ---------------------------------------------------------------- 시작
 
+if (!ASPECTS[settings.aspect]) settings.aspect = '4:3';
+updateAspectButton();
 syncSettingsForm();
 renderZoomBar();
 loadItems();

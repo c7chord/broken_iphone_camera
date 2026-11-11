@@ -36,6 +36,7 @@ button {
 button:disabled { opacity: 0.3; }
 
 #app {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -45,6 +46,8 @@ button:disabled { opacity: 0.3; }
 
 /* 상단 */
 #topbar {
+  position: relative;
+  z-index: 2;
   height: 48px;
   display: flex;
   align-items: center;
@@ -66,6 +69,7 @@ button:disabled { opacity: 0.3; }
 }
 #status { text-align: center; }
 #format-info {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   font-size: 11px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -83,16 +87,16 @@ button:disabled { opacity: 0.3; }
 #rec-time[hidden], #format-info[hidden] { display: none; }
 
 /* 미리보기 */
+/* 미리보기는 화면 전체 레이어. 크기/위치는 app.js 의 layoutStage() 가 정한다 (가로 꽉 채움) */
 #viewport {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 #stage {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   overflow: hidden;
   background: #000;
   touch-action: none;
@@ -141,6 +145,9 @@ button:disabled { opacity: 0.3; }
 
 /* 줌 */
 #zoombar {
+  position: relative;
+  z-index: 2;
+  margin-top: auto !important;
   flex: none;
   align-self: center;
   display: flex;
@@ -170,6 +177,8 @@ button:disabled { opacity: 0.3; }
 
 /* 모드 */
 #modes {
+  position: relative;
+  z-index: 2;
   flex: none;
   display: flex;
   justify-content: center;
@@ -177,6 +186,7 @@ button:disabled { opacity: 0.3; }
   margin-bottom: 14px;
 }
 #modes button {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   font-size: 15px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
@@ -186,6 +196,8 @@ button:disabled { opacity: 0.3; }
 
 /* 하단 */
 #bottombar {
+  position: relative;
+  z-index: 2;
   flex: none;
   display: flex;
   align-items: center;
@@ -446,3 +458,17 @@ body.recording #shutter-inner { width: 30px; height: 30px; border-radius: 6px; }
 #tip[hidden] { display: none; }
 #tip p { margin: 0 0 12px; }
 #tip button { width: 100%; padding: 10px; font-size: 15px; }
+
+/* 비율 버튼 */
+.pill {
+  min-width: 44px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.35);
+}
+.pill[hidden] { visibility: hidden; display: inline-block; }
+#message { z-index: 3; }
